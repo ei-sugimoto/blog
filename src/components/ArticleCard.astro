@@ -1,0 +1,77 @@
+---
+export interface Props {
+  title: string;
+  date: Date;
+  description?: string;
+  tags: string[];
+  slug: string;
+  category?: string;
+}
+
+const { title, date, description, tags, slug, category } = Astro.props;
+
+function formatDate(date: Date): string {
+  return date.toLocaleDateString('ja-JP', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric'
+  });
+}
+---
+
+<article class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden hover:shadow-md transition-shadow duration-200">
+  <div class="p-6">
+    <div class="flex items-center text-sm text-gray-500 dark:text-gray-400 mb-2">
+      <time datetime={date.toISOString()}>{formatDate(date)}</time>
+      {category && (
+        <>
+          <span class="mx-2">•</span>
+          <a 
+            href={`/categories/${category}`} 
+            class="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 transition-colors"
+          >
+            {category}
+          </a>
+        </>
+      )}
+    </div>
+    
+    <h2 class="text-xl font-semibold text-gray-900 dark:text-white mb-3">
+      <a 
+        href={`/articles/${slug}`} 
+        class="hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+      >
+        {title}
+      </a>
+    </h2>
+    
+    {description && (
+      <p class="text-gray-600 dark:text-gray-300 mb-4 line-clamp-3">
+        {description}
+      </p>
+    )}
+    
+    {tags.length > 0 && (
+      <div class="flex flex-wrap gap-2">
+        {tags.map((tag) => (
+          <a 
+            href={`/tags/${tag}`} 
+            class="inline-block bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 px-2 py-1 rounded-md text-xs font-medium hover:bg-blue-200 dark:hover:bg-blue-800 transition-colors"
+          >
+            #{tag}
+          </a>
+        ))}
+      </div>
+    )}
+  </div>
+</article>
+
+<!-- line-clamp-3 のためのカスタムCSS -->
+<style>
+  .line-clamp-3 {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+</style>

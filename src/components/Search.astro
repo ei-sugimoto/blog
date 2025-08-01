@@ -1,0 +1,230 @@
+---
+export interface Props {
+  placeholder?: string;
+}
+
+const { placeholder = "記事を検索..." } = Astro.props;
+---
+
+<div class="search-container">
+  <div class="relative">
+    <input
+      type="text"
+      id="search-input"
+      placeholder={placeholder}
+      class="w-full px-4 py-2 pl-10 pr-4 text-gray-900 dark:text-white bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+    />
+    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+      <svg class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+      </svg>
+    </div>
+    <div id="search-loading" class="absolute inset-y-0 right-0 pr-3 flex items-center hidden">
+      <div class="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-500"></div>
+    </div>
+  </div>
+  
+  <div id="search-results" class="mt-4 hidden">
+    <div id="search-results-content" class="space-y-4"></div>
+    <div id="search-no-results" class="text-center py-8 text-gray-600 dark:text-gray-400 hidden">
+      検索結果が見つかりませんでした。
+    </div>
+  </div>
+</div>
+
+<script>
+  import Fuse from 'fuse.js';
+  
+  interface SearchResult {
+    title: string;
+    content: string;
+    tags: string[];
+    category?: string;
+    slug: string;
+    date: string;
+    description?: string;
+  }
+  
+  class SearchManager {
+    private fuse: Fuse<SearchResult> | null = null;
+    private searchData: SearchResult[] = [];
+    private searchInput: HTMLInputElement;
+    private searchResults: HTMLElement;
+    private searchResultsContent: HTMLElement;
+    private searchNoResults: HTMLElement;
+    private searchLoading: HTMLElement;
+    private debounceTimer: number | null = null;
+    
+    constructor() {
+      this.searchInput = document.getElementById('search-input') as HTMLInputElement;
+      this.searchResults = document.getElementById('search-results') as HTMLElement;
+      this.searchResultsContent = document.getElementById('search-results-content') as HTMLElement;
+      this.searchNoResults = document.getElementById('search-no-results') as HTMLElement;
+      this.searchLoading = document.getElementById('search-loading') as HTMLElement;
+      
+      this.init();
+    }
+    
+    private async init() {
+      await this.loadSearchData();
+      this.setupEventListeners();
+    }
+    
+    private async loadSearchData() {
+      try {
+        const response = await fetch('/api/search.json');
+        this.searchData = await response.json();
+        
+        this.fuse = new Fuse(this.searchData, {
+          keys: [
+            { name: 'title', weight: 0.4 },
+            { name: 'content', weight: 0.3 },
+            { name: 'tags', weight: 0.2 },
+            { name: 'category', weight: 0.1 },
+          ],
+          threshold: 0.3,
+          includeScore: true,
+          includeMatches: true,
+        });
+      } catch (error) {
+        console.error('Failed to load search data:', error);
+      }
+    }
+    
+    private setupEventListeners() {
+      this.searchInput.addEventListener('input', (e) => {
+        const query = (e.target as HTMLInputElement).value.trim();
+        
+        if (this.debounceTimer) {
+          clearTimeout(this.debounceTimer);
+        }
+        
+        this.debounceTimer = window.setTimeout(() => {
+          this.performSearch(query);
+        }, 300);
+      });
+      
+      this.searchInput.addEventListener('focus', () => {
+        const query = this.searchInput.value.trim();
+        if (query) {
+          this.searchResults.classList.remove('hidden');
+        }
+      });
+      
+      document.addEventListener('click', (e) => {
+        if (!this.searchInput.contains(e.target as Node) && !this.searchResults.contains(e.target as Node)) {
+          this.searchResults.classList.add('hidden');
+        }
+      });
+    }
+    
+    private performSearch(query: string) {
+      if (!query || !this.fuse) {
+        this.searchResults.classList.add('hidden');
+        return;
+      }
+      
+      this.showLoading(true);
+      
+      const results = this.fuse.search(query);
+      this.displayResults(results, query);
+      
+      this.showLoading(false);
+    }
+    
+    private showLoading(show: boolean) {
+      if (show) {
+        this.searchLoading.classList.remove('hidden');
+      } else {
+        this.searchLoading.classList.add('hidden');
+      }
+    }
+    
+    private displayResults(results: Fuse.FuseResult<SearchResult>[], query: string) {
+      this.searchResults.classList.remove('hidden');
+      
+      if (results.length === 0) {
+        this.searchResultsContent.classList.add('hidden');
+        this.searchNoResults.classList.remove('hidden');
+        return;
+      }
+      
+      this.searchNoResults.classList.add('hidden');
+      this.searchResultsContent.classList.remove('hidden');
+      
+      const maxResults = 5;
+      const limitedResults = results.slice(0, maxResults);
+      
+      this.searchResultsContent.innerHTML = limitedResults.map(result => {
+        const item = result.item;
+        const highlightedTitle = this.highlightMatches(item.title, result.matches?.find(m => m.key === 'title'));
+        const highlightedContent = this.getSnippet(item.content, query);
+        
+        return `
+          <div class="bg-white dark:bg-gray-800 p-4 rounded-lg border border-gray-200 dark:border-gray-700 hover:shadow-md transition-shadow">
+            <h3 class="text-lg font-semibold mb-2">
+              <a href="/articles/${item.slug}" class="text-gray-900 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
+                ${highlightedTitle}
+              </a>
+            </h3>
+            <p class="text-gray-600 dark:text-gray-300 text-sm mb-2">${highlightedContent}</p>
+            <div class="flex items-center text-xs text-gray-500 dark:text-gray-400 space-x-4">
+              <time>${new Date(item.date).toLocaleDateString('ja-JP')}</time>
+              ${item.category ? `<span class="text-green-600 dark:text-green-400">${item.category}</span>` : ''}
+              <div class="flex space-x-1">
+                ${item.tags.slice(0, 3).map(tag => `<span class="text-blue-600 dark:text-blue-400">#${tag}</span>`).join(' ')}
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+    
+    private highlightMatches(text: string, match?: Fuse.FuseResultMatch): string {
+      if (!match || !match.indices) return text;
+      
+      let result = '';
+      let lastIndex = 0;
+      
+      match.indices.forEach(([start, end]) => {
+        result += text.slice(lastIndex, start);
+        result += `<mark class="bg-yellow-200 dark:bg-yellow-800">${text.slice(start, end + 1)}</mark>`;
+        lastIndex = end + 1;
+      });
+      
+      result += text.slice(lastIndex);
+      return result;
+    }
+    
+    private getSnippet(content: string, query: string): string {
+      const snippetLength = 150;
+      const queryIndex = content.toLowerCase().indexOf(query.toLowerCase());
+      
+      if (queryIndex === -1) {
+        return content.slice(0, snippetLength) + (content.length > snippetLength ? '...' : '');
+      }
+      
+      const start = Math.max(0, queryIndex - snippetLength / 2);
+      const end = start + snippetLength;
+      
+      let snippet = content.slice(start, end);
+      
+      if (start > 0) snippet = '...' + snippet;
+      if (end < content.length) snippet = snippet + '...';
+      
+      return snippet;
+    }
+  }
+  
+  // DOMContentLoadedで初期化
+  document.addEventListener('DOMContentLoaded', () => {
+    new SearchManager();
+  });
+</script>
+
+<style>
+  mark {
+    padding: 0.1em 0.2em;
+    border-radius: 0.2em;
+  }
+</style>

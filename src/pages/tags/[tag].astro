@@ -1,0 +1,107 @@
+---
+import { getCollection } from 'astro:content';
+import type { GetStaticPaths } from 'astro';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+import ArticleCard from '../../components/ArticleCard.astro';
+import { getArticlesByTag, getAllTags } from '../../utils/content';
+
+export const getStaticPaths: GetStaticPaths = async () => {
+  const allArticles = await getCollection('articles');
+  const allTags = getAllTags(allArticles);
+  
+  return allTags.map((tag) => ({
+    params: { tag },
+    props: { 
+      articles: getArticlesByTag(allArticles, tag),
+      tag,
+      allTags
+    },
+  }));
+};
+
+const { articles, tag, allTags } = Astro.props;
+---
+
+<BaseLayout title={`タグ: ${tag} - Tech Blog`} description={`${tag}に関する記事一覧`}>
+  <Header />
+  
+  <main class="flex-1 bg-white dark:bg-gray-900">
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <!-- パンくずナビ -->
+      <nav class="text-sm breadcrumbs mb-8">
+        <ol class="flex items-center space-x-2 text-gray-500 dark:text-gray-400">
+          <li>
+            <a href="/" class="hover:text-blue-600 dark:hover:text-blue-400 transition-colors">ホーム</a>
+          </li>
+          <li>
+            <span class="mx-2">/</span>
+          </li>
+          <li>
+            <a href="/tags" class="hover:text-blue-600 dark:hover:text-blue-400 transition-colors">タグ</a>
+          </li>
+          <li>
+            <span class="mx-2">/</span>
+          </li>
+          <li class="text-gray-700 dark:text-gray-300">
+            {tag}
+          </li>
+        </ol>
+      </nav>
+
+      <!-- ページヘッダー -->
+      <header class="mb-12">
+        <h1 class="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-4">
+          タグ: #{tag}
+        </h1>
+        <p class="text-lg text-gray-600 dark:text-gray-300">
+          {articles.length}件の記事があります
+        </p>
+      </header>
+
+      <!-- 他のタグ -->
+      <section class="mb-12">
+        <h2 class="text-xl font-semibold text-gray-900 dark:text-white mb-4">
+          その他のタグ
+        </h2>
+        <div class="flex flex-wrap gap-2">
+          {allTags.filter(t => t !== tag).map((otherTag) => (
+            <a 
+              href={`/tags/${otherTag}`} 
+              class="inline-block bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200 px-3 py-1 rounded-full text-sm font-medium hover:bg-blue-100 dark:hover:bg-blue-900 hover:text-blue-800 dark:hover:text-blue-200 transition-colors"
+            >
+              #{otherTag}
+            </a>
+          ))}
+        </div>
+      </section>
+
+      <!-- 記事一覧 -->
+      <section>
+        {articles.length === 0 ? (
+          <div class="text-center py-12">
+            <p class="text-gray-600 dark:text-gray-400 text-lg">
+              このタグの記事はありません。
+            </p>
+          </div>
+        ) : (
+          <div class="grid gap-6 md:gap-8">
+            {articles.map((article) => (
+              <ArticleCard
+                title={article.data.title}
+                date={article.data.date}
+                description={article.data.description}
+                tags={article.data.tags}
+                slug={article.slug}
+                category={article.data.category}
+              />
+            ))}
+          </div>
+        )}
+      </section>
+    </div>
+  </main>
+  
+  <Footer />
+</BaseLayout>

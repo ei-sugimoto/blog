@@ -1,0 +1,71 @@
+---
+// ヘッダーコンポーネント
+---
+
+<header class="bg-white dark:bg-gray-900 shadow-sm border-b border-gray-200 dark:border-gray-700">
+  <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="flex justify-between items-center py-6">
+      <div class="flex items-center">
+        <a href="/" class="text-2xl font-bold text-gray-900 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
+          Tech Blog
+        </a>
+      </div>
+      
+      <nav class="hidden md:flex space-x-8">
+        <a href="/" class="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 px-3 py-2 rounded-md text-sm font-medium transition-colors">
+          ホーム
+        </a>
+        <a href="/tags" class="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 px-3 py-2 rounded-md text-sm font-medium transition-colors">
+          タグ
+        </a>
+        <a href="/categories" class="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 px-3 py-2 rounded-md text-sm font-medium transition-colors">
+          カテゴリ
+        </a>
+        <a href="/rss.xml" class="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 px-3 py-2 rounded-md text-sm font-medium transition-colors">
+          RSS
+        </a>
+      </nav>
+      
+      <!-- モバイルメニューボタン -->
+      <div class="md:hidden">
+        <button id="mobile-menu-button" class="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 focus:outline-none focus:text-blue-600 dark:focus:text-blue-400">
+          <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+          </svg>
+        </button>
+      </div>
+    </div>
+    
+    <!-- モバイルメニュー -->
+    <div id="mobile-menu" class="md:hidden hidden pb-4">
+      <div class="flex flex-col space-y-2">
+        <a href="/" class="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 block px-3 py-2 rounded-md text-base font-medium transition-colors">
+          ホーム
+        </a>
+        <a href="/tags" class="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 block px-3 py-2 rounded-md text-base font-medium transition-colors">
+          タグ
+        </a>
+        <a href="/categories" class="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 block px-3 py-2 rounded-md text-base font-medium transition-colors">
+          カテゴリ
+        </a>
+        <a href="/rss.xml" class="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 block px-3 py-2 rounded-md text-base font-medium transition-colors">
+          RSS
+        </a>
+      </div>
+    </div>
+  </div>
+</header>
+
+<script>
+  // モバイルメニューの制御
+  document.addEventListener('DOMContentLoaded', function() {
+    const button = document.getElementById('mobile-menu-button');
+    const menu = document.getElementById('mobile-menu');
+    
+    if (button && menu) {
+      button.addEventListener('click', function() {
+        menu.classList.toggle('hidden');
+      });
+    }
+  });
+</script>

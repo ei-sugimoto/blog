@@ -1,0 +1,32 @@
+/* KaTeX CSS */
+@import 'katex/dist/katex.min.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* カスタムスタイル */
+@layer components {
+  .article-content {
+    @apply prose prose-lg max-w-none prose-headings:text-gray-900 prose-a:text-blue-600 hover:prose-a:text-blue-800;
+  }
+  
+  .article-content pre {
+    @apply bg-gray-900 text-gray-100 p-4 rounded-lg overflow-x-auto;
+  }
+  
+  .article-content code:not(pre code) {
+    @apply bg-gray-100 px-1 py-0.5 rounded text-sm;
+  }
+}
+
+/* ダークモード対応 */
+@media (prefers-color-scheme: dark) {
+  .article-content {
+    @apply prose-invert;
+  }
+  
+  .article-content code:not(pre code) {
+    @apply bg-gray-800 text-gray-200;
+  }
+}

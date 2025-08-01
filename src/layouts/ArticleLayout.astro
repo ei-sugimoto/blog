@@ -1,0 +1,131 @@
+---
+import BaseLayout from './BaseLayout.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+
+export interface Props {
+  frontmatter: {
+    title: string;
+    date: Date;
+    updated?: Date;
+    tags: string[];
+    category?: string;
+    description?: string;
+    author?: string;
+  };
+}
+
+const { frontmatter } = Astro.props;
+
+function formatDate(date: Date): string {
+  return date.toLocaleDateString('ja-JP', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric'
+  });
+}
+---
+
+<BaseLayout title={frontmatter.title} description={frontmatter.description}>
+  <Header />
+  
+  <main class="flex-1 bg-white dark:bg-gray-900">
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <!-- パンくずナビ -->
+      <nav class="text-sm breadcrumbs mb-8">
+        <ol class="flex items-center space-x-2 text-gray-500 dark:text-gray-400">
+          <li>
+            <a href="/" class="hover:text-blue-600 dark:hover:text-blue-400 transition-colors">ホーム</a>
+          </li>
+          <li>
+            <span class="mx-2">/</span>
+          </li>
+          {frontmatter.category && (
+            <>
+              <li>
+                <a href={`/categories/${frontmatter.category}`} class="hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
+                  {frontmatter.category}
+                </a>
+              </li>
+              <li>
+                <span class="mx-2">/</span>
+              </li>
+            </>
+          )}
+          <li class="text-gray-700 dark:text-gray-300">
+            {frontmatter.title}
+          </li>
+        </ol>
+      </nav>
+
+      <!-- 記事ヘッダー -->
+      <header class="mb-8">
+        <h1 class="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-4">
+          {frontmatter.title}
+        </h1>
+        
+        <div class="flex flex-wrap items-center gap-4 text-sm text-gray-600 dark:text-gray-400 mb-4">
+          <time datetime={frontmatter.date.toISOString()}>
+            投稿: {formatDate(frontmatter.date)}
+          </time>
+          
+          {frontmatter.updated && frontmatter.updated.getTime() !== frontmatter.date.getTime() && (
+            <time datetime={frontmatter.updated.toISOString()}>
+              更新: {formatDate(frontmatter.updated)}
+            </time>
+          )}
+          
+          {frontmatter.author && (
+            <span>著者: {frontmatter.author}</span>
+          )}
+        </div>
+
+        {frontmatter.tags.length > 0 && (
+          <div class="flex flex-wrap gap-2 mb-6">
+            {frontmatter.tags.map((tag) => (
+              <a 
+                href={`/tags/${tag}`} 
+                class="inline-block bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 px-3 py-1 rounded-full text-sm font-medium hover:bg-blue-200 dark:hover:bg-blue-800 transition-colors"
+              >
+                #{tag}
+              </a>
+            ))}
+          </div>
+        )}
+      </header>
+
+      <!-- 記事本文 -->
+      <article class="article-content prose prose-lg max-w-none dark:prose-invert">
+        <slot />
+      </article>
+
+      <!-- 記事フッター -->
+      <footer class="mt-12 pt-8 border-t border-gray-200 dark:border-gray-700">
+        <div class="flex flex-col sm:flex-row justify-between items-start gap-4">
+          {frontmatter.category && (
+            <div>
+              <span class="text-gray-600 dark:text-gray-400 text-sm">カテゴリ: </span>
+              <a 
+                href={`/categories/${frontmatter.category}`} 
+                class="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 font-medium transition-colors"
+              >
+                {frontmatter.category}
+              </a>
+            </div>
+          )}
+          
+          <div class="flex space-x-4">
+            <a 
+              href="/" 
+              class="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 text-sm font-medium transition-colors"
+            >
+              ← 記事一覧に戻る
+            </a>
+          </div>
+        </div>
+      </footer>
+    </div>
+  </main>
+  
+  <Footer />
+</BaseLayout>
