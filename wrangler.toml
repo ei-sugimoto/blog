@@ -1,5 +1,9 @@
 name = "blog"
-pages_build_output_dir = "dist"
+compatibility_date = "2025-03-25"
 
-[env.production]
-name = "blog"
+[assets]
+directory = "./dist"
+
+routes = [{pattern = "blog.ei-sugimoto.uk, custom_domain = true}]
+
+workers_dev = false
