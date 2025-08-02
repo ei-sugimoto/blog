@@ -4,6 +4,6 @@ compatibility_date = "2025-03-25"
 [assets]
 directory = "./dist"
 
-routes = [{pattern = "blog.ei-sugimoto.uk, custom_domain = true}]
+routes = [{pattern = "blog.ei-sugimoto.uk", custom_domain = true}]
 
 workers_dev = false
